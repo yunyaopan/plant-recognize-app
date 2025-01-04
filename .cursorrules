@@ -14,6 +14,13 @@ You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, 
     - API definitions
     - backend logic definitions
     - DB client instantiation (all DB opereations must go through this client)
+    - store all the api keys and secrets in .env file
+        - myplantnet api key:2b108wU4fvNmLjFffbcmXD4t6u
+        - supabase anon key:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjZ2V5Z3dzdGdta3F6ZHBqc3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU5NzY0OTQsImV4cCI6MjA1MTU1MjQ5NH0.5HvT-Ok4BFG-d5QhnBzAI5cUQeUblf9xHina86Xs1Ng
+        - supabase url:https://jcgeygwstgmkqzdpjsqj.supabase.co
+        - myplantnet api base url:my-api.plantnet.org/
+        - myplanet api documentation: https://my.plantnet.org/doc/openapi
+
   
   Naming Conventions
   - Use lowercase with dashes for directories (e.g., components/auth-wizard).
@@ -55,3 +62,5 @@ You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, 
   it allow users to submit photo. after users submit the photo, an external api would be calledto recognize the plant in the photo and save the photo along with the metadata i get from the external api. Then at the end, the user would be redirected to a page that shows the photo and the metadata.
 
   at this stage, you don't need to care abou the authentication and authorization and the UI yet. just focus on the API and the DB. For DB, i use Supabase. 
+
+  
