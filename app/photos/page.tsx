@@ -94,8 +94,13 @@ export default function PhotoUploadPage() {
       <h2 className="text-xl font-bold mt-8">Plant Families</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
         {plantFamilies.map((family) => (
-          <div key={family.id} className="bg-gray-200 h-32 flex items-center justify-center">
-            <p>{family.family_scientificNameWithoutAuthor}</p>
+          <div key={family.id} className="bg-white shadow-md rounded-lg overflow-hidden">
+            <div className="bg-gray-200 h-32 flex items-center justify-center">
+              {/* Placeholder for image */}
+            </div>
+            <div className="p-4">
+              <h3 className="text-lg font-semibold">{family.family_scientificNameWithoutAuthor}</h3>
+            </div>
           </div>
         ))}
       </div>
