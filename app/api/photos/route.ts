@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       throw storageError;
     }
 
-    const photoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/photos/${filename}`;
+    const photoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/photos/public/${filename}`;
 
     // Construct the full URL for the recognize-plant API
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const genusScientificName = bestMatch.species.genus.scientificNameWithoutAuthor;
 
     // Insert record into the photos table
-    const { data: dbData, error: dbError } = await supabase
+    const {  error: dbError } = await supabase
       .from('photos')
       .insert([
         {
@@ -68,7 +68,14 @@ export async function POST(req: NextRequest) {
       throw dbError;
     }
 
-    return NextResponse.json({ message: 'File uploaded and record created successfully', data: dbData });
+    return NextResponse.json({
+      message: 'File uploaded and record created successfully',
+      data: {
+        photoUrl,
+        family_scientificNameWithoutAuthor: familyScientificName,
+        genus_scientificNameWithoutAuthor: genusScientificName,
+      },
+    });
   } catch (error) {
     console.error('Error uploading file:', error);
     return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
