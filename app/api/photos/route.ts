@@ -10,20 +10,20 @@ export const config = {
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get('file');
+    const images = formData.get('images');
 
-    if (!file || !(file instanceof File)) {
+    if (!images || !(images instanceof File)) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const buffer = Buffer.from(await images.arrayBuffer());
+    const filename = `${Date.now()}-${images.name.replace(/\s+/g, '_')}`;
 
     // Upload to Supabase storage
-    const { data: storageData, error: storageError } = await supabase.storage
+    const { error: storageError } = await supabase.storage
       .from('photos') // Ensure this matches your bucket name
       .upload(`public/${filename}`, buffer, {
-        contentType: file.type,
+        contentType: images.type,
         upsert: false,
       });
 
@@ -33,6 +33,25 @@ export async function POST(req: NextRequest) {
 
     const photoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/photos/${filename}`;
 
+    // Construct the full URL for the recognize-plant API
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const recognizeResponse = await fetch(`${baseUrl}/api/recognize-plant`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!recognizeResponse.ok) {
+      const errorText = await recognizeResponse.text();
+      console.error('Recognize Plant API Error:', recognizeResponse.status, recognizeResponse.statusText, errorText);
+      throw new Error(`Failed to recognize plant: ${recognizeResponse.status} ${recognizeResponse.statusText}`);
+    }
+
+    const recognizeData = await recognizeResponse.json();
+    const bestMatch = recognizeData.data.results[0]; // Assuming results are sorted by score
+
+    const familyScientificName = bestMatch.species.family.scientificNameWithoutAuthor;
+    const genusScientificName = bestMatch.species.genus.scientificNameWithoutAuthor;
+
     // Insert record into the photos table
     const { data: dbData, error: dbError } = await supabase
       .from('photos')
@@ -40,6 +59,8 @@ export async function POST(req: NextRequest) {
         {
           photoUrl,
           createdAt: new Date().toISOString(),
+          family_scientificNameWithoutAuthor: familyScientificName,
+          genus_scientificNameWithoutAuthor: genusScientificName,
         },
       ]);
 
