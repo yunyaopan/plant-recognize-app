@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface UploadResult {
   photoUrl: string;
@@ -8,10 +8,31 @@ interface UploadResult {
   genus_scientificNameWithoutAuthor: string;
 }
 
+interface PlantFamily {
+  id: string;
+  family_scientificNameWithoutAuthor: string;
+}
+
 export default function PhotoUploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
+
+  useEffect(() => {
+    // Fetch plant families from the API
+    const fetchPlantFamilies = async () => {
+      try {
+        const response = await fetch('/api/plant-families');
+        const data = await response.json();
+        setPlantFamilies(data);
+      } catch (err) {
+        console.error('Failed to fetch plant families:', err);
+      }
+    };
+
+    fetchPlantFamilies();
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -69,6 +90,15 @@ export default function PhotoUploadPage() {
           <p>Genus: {uploadResult.genus_scientificNameWithoutAuthor}</p>
         </div>
       )}
+
+      <h2 className="text-xl font-bold mt-8">Plant Families</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+        {plantFamilies.map((family) => (
+          <div key={family.id} className="bg-gray-200 h-32 flex items-center justify-center">
+            <p>{family.family_scientificNameWithoutAuthor}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 } 
