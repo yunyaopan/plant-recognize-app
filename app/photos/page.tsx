@@ -20,7 +20,6 @@ export default function PhotoUploadPage() {
   const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
 
   useEffect(() => {
-    // Fetch plant families from the API
     const fetchPlantFamilies = async () => {
       try {
         const response = await fetch('/api/plant-families');
@@ -82,21 +81,16 @@ export default function PhotoUploadPage() {
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
 
-      {uploadResult && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold">Upload Result</h2>
-          <img src={uploadResult.photoUrl} alt="Uploaded" className="mt-4 max-w-full h-auto" />
-          <p className="mt-2">Family: {uploadResult.family_scientificNameWithoutAuthor}</p>
-          <p>Genus: {uploadResult.genus_scientificNameWithoutAuthor}</p>
-        </div>
-      )}
-
       <h2 className="text-xl font-bold mt-8">Plant Families</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
         {plantFamilies.map((family) => (
           <div key={family.id} className="bg-white shadow-md rounded-lg overflow-hidden">
             <div className="bg-gray-200 h-32 flex items-center justify-center">
-              {/* Placeholder for image */}
+              {uploadResult && uploadResult.family_scientificNameWithoutAuthor === family.family_scientificNameWithoutAuthor ? (
+                <img src={uploadResult.photoUrl} alt="Uploaded" className="h-full w-full object-cover" />
+              ) : (
+                <p className="text-center">No Image</p>
+              )}
             </div>
             <div className="p-4">
               <h3 className="text-lg font-semibold">{family.family_scientificNameWithoutAuthor}</h3>
@@ -104,7 +98,10 @@ export default function PhotoUploadPage() {
           </div>
         ))}
       </div>
+
+      {uploadResult && !plantFamilies.some(family => family.family_scientificNameWithoutAuthor === uploadResult.family_scientificNameWithoutAuthor) && (
+        <p className="text-red-500 mt-4">Error: Plant family not matched.</p>
+      )}
     </div>
   );
-} 
-
+}
