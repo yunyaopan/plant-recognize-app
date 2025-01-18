@@ -70,11 +70,14 @@ export async function POST(req: NextRequest) {
     const photoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/photos/public/${filename}`;
 
     // Construct the full URL for the recognize-plant API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const recognizeResponse = await fetch(`${baseUrl}/api/recognize-plant`, {
-      method: "POST",
-      body: formData,
-    });
+    // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const recognizeResponse = await fetch(
+      `https://plant-recognize-app.vercel.app/api/recognize-plant`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     if (!recognizeResponse.ok) {
       const errorText = await recognizeResponse.text();
