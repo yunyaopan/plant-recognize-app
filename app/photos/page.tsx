@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 interface UploadResult {
   photoUrl: string;
@@ -120,6 +121,8 @@ export default function PhotoUploadPage() {
       return;
     }
 
+    const uploadToast = toast.loading("Uploading photo...");
+
     const formData = new FormData();
     formData.append("images", selectedFile);
 
@@ -128,6 +131,7 @@ export default function PhotoUploadPage() {
         method: "POST",
         body: formData,
       });
+      toast.loading("Recognizing plant...", { id: uploadToast });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -138,13 +142,24 @@ export default function PhotoUploadPage() {
       console.log("API Response:", data);
       setUploadResult(data.data);
       setError(null);
+      toast.success("Photo uploaded and plant recognized!", {
+        id: uploadToast,
+      });
+
+      // Refresh latest recognized photos
+      const latestResponse = await fetch("/api/photos/latest-recognized");
+      if (!latestResponse.ok) throw new Error("Failed to fetch latest photos");
+      const latestData = await latestResponse.json();
+      setLatestRecognized(latestData);
     } catch (err) {
       setError(err as string);
+      toast.error("Failed to upload and recognize photo", { id: uploadToast });
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      <Toaster position="bottom-center" />
       <h1 className="text-2xl font-bold mb-4">Upload a Photo</h1>
       <input
         type="file"
