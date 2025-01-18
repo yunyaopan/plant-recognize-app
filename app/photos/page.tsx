@@ -25,6 +25,8 @@ export default function PhotoUploadPage() {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [latestPhotos, setLatestPhotos] = useState<Record<string, string>>({});
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [photosError, setPhotosError] = useState<string | null>(null);
@@ -33,55 +35,57 @@ export default function PhotoUploadPage() {
   >([]);
   const [loadingLatest, setLoadingLatest] = useState(false);
 
-  useEffect(() => {
-    const fetchPlantFamilies = async () => {
-      try {
-        const response = await fetch("/api/plant-families");
-        const data = await response.json();
-        setPlantFamilies(data);
-        fetchLatestPhotos(data);
-      } catch (err) {
-        console.error("Failed to fetch plant families:", err);
-      }
-    };
+  const fetchLatestPhotos = async (families: PlantFamily[]) => {
+    setLoadingPhotos(true);
+    setPhotosError(null);
+    try {
+      const photos: Record<string, string> = {};
 
-    const fetchLatestPhotos = async (families: PlantFamily[]) => {
-      setLoadingPhotos(true);
-      setPhotosError(null);
-      try {
-        const photos: Record<string, string> = {};
-
-        for (const family of families) {
-          try {
-            const response = await fetch(
-              `/api/photos/latest?family=${encodeURIComponent(
-                family.family_scientificNameWithoutAuthor
-              )}`
-            );
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            if (data.url) {
-              photos[family.family_scientificNameWithoutAuthor] = data.url;
-            }
-          } catch (err) {
-            console.error(
-              `Failed to fetch photo for ${family.family_scientificNameWithoutAuthor}:`,
-              err
-            );
+      for (const family of families) {
+        try {
+          const response = await fetch(
+            `/api/photos/latest?family=${encodeURIComponent(
+              family.family_scientificNameWithoutAuthor
+            )}`
+          );
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
+          const data = await response.json();
+          if (data.url) {
+            photos[family.family_scientificNameWithoutAuthor] = data.url;
+          }
+        } catch (err) {
+          console.error(
+            `Failed to fetch photo for ${family.family_scientificNameWithoutAuthor}:`,
+            err
+          );
         }
-
-        setLatestPhotos(photos);
-      } catch (err) {
-        setPhotosError("Failed to load some photos");
-        console.error("Error fetching photos:", err);
-      } finally {
-        setLoadingPhotos(false);
       }
-    };
 
+      setLatestPhotos(photos);
+    } catch (err) {
+      setPhotosError("Failed to load some photos");
+      console.error("Error fetching photos:", err);
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  const fetchPlantFamilies = async (page: number = 1) => {
+    try {
+      const response = await fetch(`/api/plant-families?page=${page}`);
+      const data = await response.json();
+      setPlantFamilies(data.families);
+      setTotalPages(data.totalPages);
+      setCurrentPage(page);
+      fetchLatestPhotos(data.families);
+    } catch (err) {
+      console.error("Failed to fetch plant families:", err);
+    }
+  };
+
+  useEffect(() => {
     const fetchLatestRecognized = async () => {
       setLoadingLatest(true);
       try {
@@ -185,6 +189,25 @@ export default function PhotoUploadPage() {
       </div>
 
       <h2 className="text-xl font-bold mt-8">Plant Families</h2>
+      <div className="flex justify-center gap-2 mt-4">
+        <button
+          onClick={() => fetchPlantFamilies(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="px-4 py-2">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => fetchPlantFamilies(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
         {plantFamilies.map((family) => (
           <div
