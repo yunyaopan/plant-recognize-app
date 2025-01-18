@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     const { error: dbError } = await supabase.from("photos").insert([
       {
         photoUrl,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toLocaleString(),
         family_scientificNameWithoutAuthor: familyScientificName,
         genus_scientificNameWithoutAuthor: genusScientificName,
       },
