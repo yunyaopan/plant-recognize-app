@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
-interface UploadResult {
-  photoUrl: string;
-  family_scientificNameWithoutAuthor: string;
-  genus_scientificNameWithoutAuthor: string;
-}
-
 interface LatestRecognizedPhoto {
   id: string;
   photoUrl: string;
@@ -22,8 +16,6 @@ interface PlantFamily {
 }
 
 export default function PhotoUploadPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -109,70 +101,107 @@ export default function PhotoUploadPage() {
     fetchLatestRecognized();
   }, []);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files[0]) {
-      setSelectedFile(event.target.files[0]);
-    }
-  };
+      const file = event.target.files[0];
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      setError("Please select a file to upload.");
-      return;
-    }
+      // Immediately start uploading the file
+      const uploadToast = toast.loading("Uploading photo...");
 
-    const uploadToast = toast.loading("Uploading photo...");
+      const formData = new FormData();
+      formData.append("images", file);
 
-    const formData = new FormData();
-    formData.append("images", selectedFile);
+      try {
+        const response = await fetch("/api/photos", {
+          method: "POST",
+          body: formData,
+        });
+        toast.loading("Recognizing plant...", { id: uploadToast });
 
-    try {
-      const response = await fetch("/api/photos", {
-        method: "POST",
-        body: formData,
-      });
-      toast.loading("Recognizing plant...", { id: uploadToast });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to upload photo: ${errorText}`);
+        }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to upload photo: ${errorText}`);
+        const data = await response.json();
+        console.log("API Response:", data);
+        setError(null);
+        toast.success("Photo uploaded and plant recognized!", {
+          id: uploadToast,
+        });
+
+        // Refresh latest recognized photos
+        const latestResponse = await fetch("/api/photos/latest-recognized");
+        if (!latestResponse.ok)
+          throw new Error("Failed to fetch latest photos");
+        const latestData = await latestResponse.json();
+        setLatestRecognized(latestData);
+      } catch (err) {
+        setError((err as Error).message);
+        toast.error("Failed to upload and recognize photo", {
+          id: uploadToast,
+        });
       }
-
-      const data = await response.json();
-      console.log("API Response:", data);
-      setUploadResult(data.data);
-      setError(null);
-      toast.success("Photo uploaded and plant recognized!", {
-        id: uploadToast,
-      });
-
-      // Refresh latest recognized photos
-      const latestResponse = await fetch("/api/photos/latest-recognized");
-      if (!latestResponse.ok) throw new Error("Failed to fetch latest photos");
-      const latestData = await latestResponse.json();
-      setLatestRecognized(latestData);
-    } catch (err) {
-      setError(err as string);
-      toast.error("Failed to upload and recognize photo", { id: uploadToast });
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <Toaster position="bottom-center" />
-      <h1 className="text-2xl font-bold mb-4">Upload a Photo</h1>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="mb-4"
-      />
-      <button
-        onClick={handleUpload}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
-        Upload
-      </button>
+      <h1 className="text-2xl font-bold mb-4">
+        Upload a plant photo, and we'll identify its family!
+      </h1>
+      <label className="group cursor-pointer">
+        <div className="w-full max-w-2xl border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+          <div className="relative inline-block">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-16 w-16 text-gray-400 group-hover:text-gray-500 transition-colors"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <div className="absolute -top-1 -right-1 bg-white rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-blue-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </div>
+          </div>
+          <p className="mt-4 text-gray-600 font-medium">
+            Did you know there are over 400 plant families in the world?{" "}
+            <br></br>Upload a photo to start your discovery!
+          </p>
+          <p className="text-sm text-gray-400">
+            File must be JPEG, JPG, PNG, or WEBP
+          </p>
+        </div>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </label>
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
       {photosError && <p className="text-red-500 mt-4">{photosError}</p>}
@@ -291,15 +320,6 @@ export default function PhotoUploadPage() {
           </div>
         ))}
       </div>
-
-      {uploadResult &&
-        !plantFamilies.some(
-          (family) =>
-            family.family_scientificNameWithoutAuthor ===
-            uploadResult.family_scientificNameWithoutAuthor
-        ) && (
-          <p className="text-red-500 mt-4">Error: Plant family not matched.</p>
-        )}
     </div>
   );
 }
