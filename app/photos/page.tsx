@@ -27,7 +27,9 @@ export default function PhotoUploadPage() {
   const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [latestPhotos, setLatestPhotos] = useState<Record<string, string>>({});
+  const [latestPhotos, setLatestPhotos] = useState<
+    Record<string, { photoUrl: string; createdAt: string }[]>
+  >({});
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [photosError, setPhotosError] = useState<string | null>(null);
   const [latestRecognized, setLatestRecognized] = useState<
@@ -39,29 +41,30 @@ export default function PhotoUploadPage() {
     setLoadingPhotos(true);
     setPhotosError(null);
     try {
-      const photos: Record<string, string> = {};
+      const familyNames = families.map(
+        (f) => f.family_scientificNameWithoutAuthor
+      );
+      const queryParams = familyNames
+        .map((f) => `family=${encodeURIComponent(f)}`)
+        .join("&");
+      const response = await fetch(`/api/photos/latest?${queryParams}`);
 
-      for (const family of families) {
-        try {
-          const response = await fetch(
-            `/api/photos/latest?family=${encodeURIComponent(
-              family.family_scientificNameWithoutAuthor
-            )}`
-          );
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          if (data.url) {
-            photos[family.family_scientificNameWithoutAuthor] = data.url;
-          }
-        } catch (err) {
-          console.error(
-            `Failed to fetch photo for ${family.family_scientificNameWithoutAuthor}:`,
-            err
-          );
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      const photos: Record<string, { photoUrl: string; createdAt: string }[]> =
+        {};
+
+      data.forEach(
+        (result: {
+          family: string;
+          photos: { photoUrl: string; createdAt: string }[];
+        }) => {
+          photos[result.family] = result.photos;
+        }
+      );
 
       setLatestPhotos(photos);
     } catch (err) {
@@ -189,24 +192,43 @@ export default function PhotoUploadPage() {
       </div>
 
       <h2 className="text-xl font-bold mt-8">Plant Families</h2>
-      <div className="flex justify-center gap-2 mt-4">
-        <button
-          onClick={() => fetchPlantFamilies(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="px-4 py-2">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => fetchPlantFamilies(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
+      <div className="flex flex-col items-center gap-4 mt-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => fetchPlantFamilies(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => fetchPlantFamilies(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span>Go to page:</span>
+          <input
+            type="number"
+            min="1"
+            max={totalPages}
+            className="w-20 px-2 py-1 border rounded"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const page = parseInt((e.target as HTMLInputElement).value);
+                if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                  fetchPlantFamilies(page);
+                }
+              }
+            }}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
         {plantFamilies.map((family) => (
@@ -217,12 +239,22 @@ export default function PhotoUploadPage() {
             <div className="bg-gray-200 h-32 flex items-center justify-center">
               {loadingPhotos ? (
                 <p className="text-center">Loading...</p>
-              ) : latestPhotos[family.family_scientificNameWithoutAuthor] ? (
-                <img
-                  src={latestPhotos[family.family_scientificNameWithoutAuthor]}
-                  alt={`Latest ${family.family_scientificNameWithoutAuthor}`}
-                  className="h-full w-full object-cover"
-                />
+              ) : latestPhotos[family.family_scientificNameWithoutAuthor]
+                  ?.length > 0 ? (
+                <div className="relative h-full w-full">
+                  {latestPhotos[family.family_scientificNameWithoutAuthor].map(
+                    (photo, index) => (
+                      <img
+                        key={index}
+                        src={photo.photoUrl}
+                        alt={`Latest ${family.family_scientificNameWithoutAuthor}`}
+                        className={`absolute h-full w-full object-cover transition-opacity duration-300 ${
+                          index === 0 ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    )
+                  )}
+                </div>
               ) : (
                 <p className="text-center">No Image</p>
               )}
