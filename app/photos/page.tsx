@@ -8,6 +8,13 @@ interface UploadResult {
   genus_scientificNameWithoutAuthor: string;
 }
 
+interface LatestRecognizedPhoto {
+  id: string;
+  photoUrl: string;
+  family_scientificNameWithoutAuthor: string;
+  created_at: string;
+}
+
 interface PlantFamily {
   id: string;
   family_scientificNameWithoutAuthor: string;
@@ -21,6 +28,10 @@ export default function PhotoUploadPage() {
   const [latestPhotos, setLatestPhotos] = useState<Record<string, string>>({});
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [photosError, setPhotosError] = useState<string | null>(null);
+  const [latestRecognized, setLatestRecognized] = useState<
+    LatestRecognizedPhoto[]
+  >([]);
+  const [loadingLatest, setLoadingLatest] = useState(false);
 
   useEffect(() => {
     const fetchPlantFamilies = async () => {
@@ -71,7 +82,23 @@ export default function PhotoUploadPage() {
       }
     };
 
+    const fetchLatestRecognized = async () => {
+      setLoadingLatest(true);
+      try {
+        const response = await fetch("/api/photos/latest-recognized");
+        if (!response.ok)
+          throw new Error("Failed to fetch latest recognized photos");
+        const data = await response.json();
+        setLatestRecognized(data);
+      } catch (err) {
+        console.error("Error fetching latest recognized photos:", err);
+      } finally {
+        setLoadingLatest(false);
+      }
+    };
+
     fetchPlantFamilies();
+    fetchLatestRecognized();
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,6 +154,35 @@ export default function PhotoUploadPage() {
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
       {photosError && <p className="text-red-500 mt-4">{photosError}</p>}
+
+      <h2 className="text-xl font-bold mt-8">Latest Recognized Plants</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+        {loadingLatest ? (
+          <p>Loading latest recognized plants...</p>
+        ) : latestRecognized.length > 0 ? (
+          latestRecognized.map((photo) => (
+            <div
+              key={photo.id}
+              className="bg-white shadow-md rounded-lg overflow-hidden"
+            >
+              <div className="bg-gray-200 h-32 flex items-center justify-center">
+                <img
+                  src={photo.photoUrl}
+                  alt={`Recognized ${photo.family_scientificNameWithoutAuthor}`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg font-semibold">
+                  {photo.family_scientificNameWithoutAuthor}
+                </h3>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No recently recognized plants</p>
+        )}
+      </div>
 
       <h2 className="text-xl font-bold mt-8">Plant Families</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
