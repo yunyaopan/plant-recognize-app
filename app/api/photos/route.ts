@@ -60,6 +60,10 @@ export async function POST(req: NextRequest) {
       });
 
     if (storageError) {
+      console.error("Supabase Storage Error:", {
+        message: storageError.message,
+        stack: storageError.stack,
+      });
       throw storageError;
     }
 
@@ -115,10 +119,24 @@ export async function POST(req: NextRequest) {
         genus_scientificNameWithoutAuthor: genusScientificName,
       },
     });
-  } catch (error) {
-    console.error("Error uploading file:", error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error uploading file:", {
+        message: error.message,
+        stack: error.stack,
+      });
+      return NextResponse.json(
+        {
+          error: "Failed to upload file",
+          details: {
+            message: error.message,
+          },
+        },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: "An unknown error occurred during file upload" },
       { status: 500 }
     );
   }
