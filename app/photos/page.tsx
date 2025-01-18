@@ -12,7 +12,7 @@ interface LatestRecognizedPhoto {
   id: string;
   photoUrl: string;
   family_scientificNameWithoutAuthor: string;
-  created_at: string;
+  createdAt: string;
 }
 
 interface PlantFamily {
@@ -183,6 +183,15 @@ export default function PhotoUploadPage() {
                 <h3 className="text-lg font-semibold">
                   {photo.family_scientificNameWithoutAuthor}
                 </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {new Date(photo.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
             </div>
           ))
