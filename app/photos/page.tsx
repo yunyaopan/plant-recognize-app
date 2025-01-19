@@ -29,6 +29,8 @@ export default function PhotoUploadPage() {
     LatestRecognizedPhoto[]
   >([]);
   const [loadingLatest, setLoadingLatest] = useState(false);
+  const [uniqueFamiliesCount, setUniqueFamiliesCount] = useState<number>(0);
+  const [loadingCount, setLoadingCount] = useState(false);
 
   const fetchLatestPhotos = async (families: PlantFamily[]) => {
     setLoadingPhotos(true);
@@ -97,8 +99,24 @@ export default function PhotoUploadPage() {
       }
     };
 
+    const fetchUniqueFamiliesCount = async () => {
+      setLoadingCount(true);
+      try {
+        const response = await fetch("/api/photos/count");
+        if (!response.ok)
+          throw new Error("Failed to fetch unique families count");
+        const data = await response.json();
+        setUniqueFamiliesCount(data.unique_families);
+      } catch (err) {
+        console.error("Error fetching unique families count:", err);
+      } finally {
+        setLoadingCount(false);
+      }
+    };
+
     fetchPlantFamilies();
     fetchLatestRecognized();
+    fetchUniqueFamiliesCount();
   }, []);
 
   const handleFileChange = async (
@@ -245,6 +263,14 @@ export default function PhotoUploadPage() {
       </div>
 
       <h2 className="text-xl font-bold mt-8">Plant Families</h2>
+      {loadingCount ? (
+        <p className="text-gray-600">Loading family statistics...</p>
+      ) : (
+        <p className="text-gray-600">
+          You have seen {uniqueFamiliesCount} plant families out of 415 plant
+          families in the world
+        </p>
+      )}
       <div className="flex flex-col items-center gap-4 mt-4">
         <div className="flex gap-2">
           <button
