@@ -8,6 +8,9 @@ const nextConfig = {
   serverActions: {
     bodySizeLimit: "10mb",
   },
+  experimental: {
+    turbopack: false,
+  },
 };
 
 module.exports = nextConfig;

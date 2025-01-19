@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
     const { error: dbError } = await supabase.from("photos").insert([
       {
         photoUrl,
-        createdAt: new Date().toLocaleString(),
+        createdAt: new Date().toISOString(),
         family_scientificNameWithoutAuthor: familyScientificName,
         genus_scientificNameWithoutAuthor: genusScientificName,
         latitude: metadata.GPSLatitude

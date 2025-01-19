@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") || "1");
-  const perPage = 8;
+  const perPage = 20;
   const offset = (page - 1) * perPage;
 
   const { data: photos, error } = await supabase
@@ -19,5 +19,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(photos);
+  // Adjust `createdAt` to local timezone
+  const adjustedPhotos = photos.map((photo) => {
+    const utcDate = new Date(photo.createdAt); // Parse UTC datetime
+    const localDate = utcDate.toLocaleString(); // Convert to local timezone
+    return { ...photo, createdAt: localDate }; // Replace `createdAt` with adjusted value
+  });
+
+  return NextResponse.json(adjustedPhotos);
 }
