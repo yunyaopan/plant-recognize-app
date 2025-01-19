@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabase-client";
 import sharp from "sharp";
+import exifr from "exifr";
 
 export const config = {
   api: {
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
 
     // Process image with sharp
     const originalBuffer = Buffer.from(await images.arrayBuffer());
+
+    // Extract EXIF metadata
+    const metadata = await exifr.parse(originalBuffer);
     let processedBuffer = await sharp(originalBuffer)
       .resize(1200, 1200, {
         fit: "inside",
@@ -100,6 +104,60 @@ export async function POST(req: NextRequest) {
     const genusScientificName =
       bestMatch.species.genus.scientificNameWithoutAuthor;
 
+    // Convert GPS coordinates from DMS to decimal
+    const convertDMSToDecimal = (dms: number[], ref: string) => {
+      const degrees = dms[0];
+      const minutes = dms[1];
+      const seconds = dms[2];
+      let decimal = degrees + minutes / 60 + seconds / 3600;
+      if (ref === "S" || ref === "W") {
+        decimal = -decimal;
+      }
+      return decimal;
+    };
+
+    // Reverse geocode coordinates using Nominatim
+    const reverseGeocode = async (lat: number, lon: number) => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Nominatim API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return {
+          country: data.address?.country,
+          city:
+            data.address?.city || data.address?.town || data.address?.village,
+          district:
+            data.address?.suburb ||
+            data.address?.neighbourhood ||
+            data.address?.city_district,
+        };
+      } catch (error) {
+        console.error("Reverse geocoding failed:", error);
+        return null;
+      }
+    };
+
+    // Get location info if coordinates exist
+    let locationInfo = null;
+    if (metadata.GPSLatitude && metadata.GPSLongitude) {
+      const lat = convertDMSToDecimal(
+        metadata.GPSLatitude,
+        metadata.GPSLatitudeRef
+      );
+      const lon = convertDMSToDecimal(
+        metadata.GPSLongitude,
+        metadata.GPSLongitudeRef
+      );
+
+      locationInfo = await reverseGeocode(lat, lon);
+    }
+
     // Insert record into the photos table
     const { error: dbError } = await supabase.from("photos").insert([
       {
@@ -107,6 +165,16 @@ export async function POST(req: NextRequest) {
         createdAt: new Date().toLocaleString(),
         family_scientificNameWithoutAuthor: familyScientificName,
         genus_scientificNameWithoutAuthor: genusScientificName,
+        latitude: metadata.GPSLatitude
+          ? convertDMSToDecimal(metadata.GPSLatitude, metadata.GPSLatitudeRef)
+          : null,
+        longitude: metadata.GPSLongitude
+          ? convertDMSToDecimal(metadata.GPSLongitude, metadata.GPSLongitudeRef)
+          : null,
+        date_taken: metadata.DateTimeOriginal || null,
+        country: locationInfo?.country || null,
+        city: locationInfo?.city || null,
+        district: locationInfo?.district || null,
       },
     ]);
 
