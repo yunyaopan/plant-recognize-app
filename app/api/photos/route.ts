@@ -9,6 +9,7 @@ export const config = {
   },
 };
 
+//upload photo API
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();

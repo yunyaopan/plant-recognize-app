@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "../../../../lib/supabase-client";
 
+//get the latest uploaded photo of a bunch of plant families
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const families = searchParams.getAll("family");
