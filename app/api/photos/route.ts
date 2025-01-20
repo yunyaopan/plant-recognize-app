@@ -9,7 +9,35 @@ export const config = {
   },
 };
 
-//upload photo API
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const perPage = 45;
+  const offset = (page - 1) * perPage;
+
+  // Get sort field and order from query parameters
+  const sortField = searchParams.get("sortField") || "createdAt";
+  const sortOrder = searchParams.get("sortOrder") === "asc" ? true : false;
+
+  const { data: photos, error } = await supabase
+    .from("photos")
+    .select("*")
+    .order(sortField, { ascending: sortOrder })
+    .range(offset, offset + perPage - 1);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const adjustedPhotos = photos.map((photo) => {
+    const utcDate = new Date(photo.createdAt);
+    const localDate = utcDate.toLocaleString();
+    return { ...photo, createdAt: localDate };
+  });
+
+  return NextResponse.json(adjustedPhotos);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -213,3 +241,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

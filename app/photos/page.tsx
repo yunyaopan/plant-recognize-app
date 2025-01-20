@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from 'next/navigation';
 
 interface LatestRecognizedPhoto {
   id: string;
@@ -16,6 +17,8 @@ interface PlantFamily {
 }
 
 export default function PhotoUploadPage() {
+  const router = useRouter(); // Ensure this is used within a page component
+
   const [error, setError] = useState<string | null>(null);
   const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,7 +90,12 @@ export default function PhotoUploadPage() {
     const fetchLatestRecognized = async () => {
       setLoadingLatest(true);
       try {
-        const response = await fetch("/api/photos/latest-recognized");
+        // Define sortField and sortOrder
+        const sortField = "createdAt"; // Example: sort by createdAt
+        const sortOrder = "desc"; // Example: descending order
+
+        // Fetch with dynamic sorting
+        const response = await fetch(`/api/photos?sortField=${sortField}&sortOrder=${sortOrder}`);
         if (!response.ok)
           throw new Error("Failed to fetch latest recognized photos");
         const data = await response.json();
@@ -225,6 +233,12 @@ export default function PhotoUploadPage() {
       {photosError && <p className="text-red-500 mt-4">{photosError}</p>}
 
       <h2 className="text-xl font-bold mt-8">Latest Recognized Plants</h2>
+      <button
+        onClick={() => router.push('/photos/all')}
+        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+      >
+        View All Photos
+      </button>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
         {loadingLatest ? (
           <p>Loading latest recognized plants...</p>
