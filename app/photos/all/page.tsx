@@ -15,7 +15,12 @@ interface Photo {
   createdAt: string;
 }
 
+import Modal from "../../../components/Modal";
+
 export default function AllPhotosPage() {
+  // Add selectedPhoto state
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +58,11 @@ export default function AllPhotosPage() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
           {photos.map((photo) => (
-            <div key={photo.id} className="bg-white shadow-md rounded-lg overflow-hidden">
+            <div 
+              key={photo.id} 
+              className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer"
+              onClick={() => setSelectedPhoto(photo)}
+            >
               <div className="bg-gray-200 h-48 md:h-64 lg:h-80 flex items-center justify-center">
                 <img
                   src={photo.photoUrl}
@@ -83,6 +92,32 @@ export default function AllPhotosPage() {
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={!!selectedPhoto}
+        onClose={() => setSelectedPhoto(null)}
+      >
+        {selectedPhoto && (
+          <div className="max-h-[90vh] max-w-[90vw] relative">
+            <img
+              src={selectedPhoto.photoUrl}
+              alt={`Plant ${selectedPhoto.family_scientificNameWithoutAuthor}`}
+              className="max-h-[90vh] max-w-[90vw] object-contain"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-4">
+              <h3 className="text-lg font-semibold">
+                {selectedPhoto.family_scientificNameWithoutAuthor}
+              </h3>
+              <p className="text-sm">
+                Genus: {selectedPhoto.genus_scientificNameWithoutAuthor}
+              </p>
+              <p className="text-sm">
+                Location: {selectedPhoto.city || "N/A"}, {selectedPhoto.district || "N/A"}, {selectedPhoto.country || "N/A"}
+              </p>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
