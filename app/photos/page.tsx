@@ -86,50 +86,46 @@ export default function PhotoUploadPage() {
     }
   };
 
+  // Move these functions outside of useEffect
+  const fetchLatestRecognized = async () => {
+    setLoadingLatest(true);
+    try {
+      const sortField = "createdAt";
+      const sortOrder = "desc";
+      const response = await fetch(`/api/photos?sortField=${sortField}&sortOrder=${sortOrder}`);
+      if (!response.ok)
+        throw new Error("Failed to fetch latest recognized photos");
+      const data = await response.json();
+      setLatestRecognized(data);
+    } catch (err) {
+      console.error("Error fetching latest recognized photos:", err);
+    } finally {
+      setLoadingLatest(false);
+    }
+  };
+
+  const fetchUniqueFamiliesCount = async () => {
+    setLoadingCount(true);
+    try {
+      const response = await fetch("/api/photos/count");
+      if (!response.ok)
+        throw new Error("Failed to fetch unique families count");
+      const data = await response.json();
+      setUniqueFamiliesCount(data.unique_families);
+    } catch (err) {
+      console.error("Error fetching unique families count:", err);
+    } finally {
+      setLoadingCount(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchLatestRecognized = async () => {
-      setLoadingLatest(true);
-      try {
-        // Define sortField and sortOrder
-        const sortField = "createdAt"; // Example: sort by createdAt
-        const sortOrder = "desc"; // Example: descending order
-
-        // Fetch with dynamic sorting
-        const response = await fetch(`/api/photos?sortField=${sortField}&sortOrder=${sortOrder}`);
-        if (!response.ok)
-          throw new Error("Failed to fetch latest recognized photos");
-        const data = await response.json();
-        setLatestRecognized(data);
-      } catch (err) {
-        console.error("Error fetching latest recognized photos:", err);
-      } finally {
-        setLoadingLatest(false);
-      }
-    };
-
-    const fetchUniqueFamiliesCount = async () => {
-      setLoadingCount(true);
-      try {
-        const response = await fetch("/api/photos/count");
-        if (!response.ok)
-          throw new Error("Failed to fetch unique families count");
-        const data = await response.json();
-        setUniqueFamiliesCount(data.unique_families);
-      } catch (err) {
-        console.error("Error fetching unique families count:", err);
-      } finally {
-        setLoadingCount(false);
-      }
-    };
-
     fetchPlantFamilies();
     fetchLatestRecognized();
     fetchUniqueFamiliesCount();
   }, []);
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
 
@@ -144,29 +140,38 @@ export default function PhotoUploadPage() {
           method: "POST",
           body: formData,
         });
-        toast.loading("Recognizing plant...", { id: uploadToast });
 
+        // Try to parse error response as JSON first
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to upload photo: ${errorText}`);
+          let errorMessage;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || 'Failed to upload photo';
+          } catch {
+            // If not JSON, get as text
+            errorMessage = await response.text();
+          }
+          throw new Error(errorMessage);
         }
 
+        toast.loading("Recognizing plant...", { id: uploadToast });
         const data = await response.json();
         console.log("API Response:", data);
         setError(null);
+        
+        // Refresh data after successful upload
+        await Promise.all([
+          fetchLatestRecognized(),
+          fetchUniqueFamiliesCount(),
+          fetchPlantFamilies(currentPage)
+        ]);
+
         toast.success("Photo uploaded and plant recognized!", {
           id: uploadToast,
         });
-
-        // Refresh latest recognized photos
-        const latestResponse = await fetch("/api/photos/latest-recognized");
-        if (!latestResponse.ok)
-          throw new Error("Failed to fetch latest photos");
-        const latestData = await latestResponse.json();
-        setLatestRecognized(latestData);
       } catch (err) {
         setError((err as Error).message);
-        toast.error("Failed to upload and recognize photo", {
+        toast.error((err as Error).message || "Failed to upload and recognize photo", {
           id: uploadToast,
         });
       }
