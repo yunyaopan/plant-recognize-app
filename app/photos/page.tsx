@@ -125,6 +125,29 @@ export default function PhotoUploadPage() {
     fetchUniqueFamiliesCount();
   }, []);
 
+  // Add new state variables after other state declarations
+  const [latestUploadedFamily, setLatestUploadedFamily] = useState<string | null>(null);
+  const [similarPhotos, setSimilarPhotos] = useState<LatestRecognizedPhoto[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
+
+  // Add new function after other fetch functions
+  const fetchSimilarPhotos = async (familyName: string) => {
+    setLoadingSimilar(true);
+    try {
+      const response = await fetch(
+        `/api/photos?family_scientificNameWithoutAuthor=${encodeURIComponent(familyName)}&sortField=createdAt&sortOrder=desc`
+      );
+      if (!response.ok) throw new Error("Failed to fetch similar photos");
+      const data = await response.json();
+      setSimilarPhotos(data);
+    } catch (err) {
+      console.error("Error fetching similar photos:", err);
+    } finally {
+      setLoadingSimilar(false);
+    }
+  };
+
+  // Modify handleFileChange to update latest family and fetch similar photos
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
@@ -159,7 +182,12 @@ export default function PhotoUploadPage() {
         console.log("API Response:", data);
         setError(null);
         
-        // Refresh data after successful upload
+        // Set latest uploaded family and fetch similar photos
+        const familyName = data.data.family_scientificNameWithoutAuthor;
+        setLatestUploadedFamily(familyName);
+        await fetchSimilarPhotos(familyName);
+        
+        // Refresh other data
         await Promise.all([
           fetchLatestRecognized(),
           fetchUniqueFamiliesCount(),
@@ -178,6 +206,7 @@ export default function PhotoUploadPage() {
     }
   };
 
+  // Add new section in the return statement after the file upload section and before "Latest Recognized Plants"
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <Toaster position="bottom-center" />
@@ -237,6 +266,48 @@ export default function PhotoUploadPage() {
       {error && <p className="text-red-500 mt-4">{error}</p>}
       {photosError && <p className="text-red-500 mt-4">{photosError}</p>}
 
+      {/* Grid containers with consistent card styles */}
+      {latestUploadedFamily && (
+        <div className="w-full max-w-7xl mt-8">
+          <h2 className="text-xl font-bold mb-4 text-center">
+            More Plants from {latestUploadedFamily} Family
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full max-w-7xl">
+            {loadingSimilar ? (
+              <p>Loading similar plants...</p>
+            ) : similarPhotos.length > 1 ? (
+              similarPhotos.map((photo) => (
+                <div
+                  key={photo.id}
+                  className="bg-white shadow-md rounded-lg overflow-hidden h-[280px]"
+                >
+                  <div className="h-48 w-full">
+                    <img
+                      src={photo.photoUrl}
+                      alt={`${photo.family_scientificNameWithoutAuthor} family plant`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm text-gray-500">
+                      {new Date(photo.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="col-span-full text-center text-lg text-green-600">
+                Congratulations! You discovered a new plant family! 🌱
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       <h2 className="text-xl font-bold mt-8">Latest Recognized Plants</h2>
       <button
         onClick={() => router.push('/photos/all')}
@@ -244,16 +315,16 @@ export default function PhotoUploadPage() {
       >
         View All Photos
       </button>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full max-w-7xl">
         {loadingLatest ? (
           <p>Loading latest recognized plants...</p>
         ) : latestRecognized.length > 0 ? (
           latestRecognized.map((photo) => (
             <div
               key={photo.id}
-              className="bg-white shadow-md rounded-lg overflow-hidden"
+              className="bg-white shadow-md rounded-lg overflow-hidden h-[280px]"
             >
-              <div className="bg-gray-200 h-32 flex items-center justify-center">
+              <div className="h-48 w-full">
                 <img
                   src={photo.photoUrl}
                   alt={`Recognized ${photo.family_scientificNameWithoutAuthor}`}
@@ -261,7 +332,7 @@ export default function PhotoUploadPage() {
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold truncate">
                   {photo.family_scientificNameWithoutAuthor}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">

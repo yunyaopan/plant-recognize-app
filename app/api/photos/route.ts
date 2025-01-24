@@ -19,11 +19,36 @@ export async function GET(request: NextRequest) {
   const sortField = searchParams.get("sortField") || "createdAt";
   const sortOrder = searchParams.get("sortOrder") === "asc" ? true : false;
 
-  const { data: photos, error } = await supabase
+  // Get filter parameters
+  const filters: Record<string, string> = {};
+  const allowedFilters = [
+    'family_scientificNameWithoutAuthor',
+    'genus_scientificNameWithoutAuthor',
+    'country',
+    'city',
+    'district'
+  ];
+
+  allowedFilters.forEach(filter => {
+    const value = searchParams.get(filter);
+    if (value) {
+      filters[filter] = value;
+    }
+  });
+
+  // Build query
+  let query = supabase
     .from("photos")
     .select("*")
-    .order(sortField, { ascending: sortOrder })
-    .range(offset, offset + perPage - 1);
+    .order(sortField, { ascending: sortOrder });
+
+  // Apply filters
+  Object.entries(filters).forEach(([key, value]) => {
+    query = query.eq(key, value);
+  });
+
+  // Apply pagination
+  const { data: photos, error } = await query.range(offset, offset + perPage - 1);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
