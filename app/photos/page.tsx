@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 interface LatestRecognizedPhoto {
   id: string;
@@ -16,7 +17,11 @@ interface PlantFamily {
   family_scientificNameWithoutAuthor: string;
 }
 
+
+
 export default function PhotoUploadPage() {
+  const { t } = useTranslation();
+  
   const router = useRouter(); // Ensure this is used within a page component
 
   const [error, setError] = useState<string | null>(null);
@@ -211,7 +216,7 @@ export default function PhotoUploadPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <Toaster position="bottom-center" />
       <h1 className="text-2xl font-bold mb-4">
-        Upload a plant photo, and we'll identify its family!
+        {t('uploadTitle')}
       </h1>
       <label className="group cursor-pointer">
         <div className="w-full max-w-2xl border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
@@ -248,8 +253,7 @@ export default function PhotoUploadPage() {
             </div>
           </div>
           <p className="mt-4 text-gray-600 font-medium">
-            Did you know there are over 400 plant families in the world?{" "}
-            <br></br>Upload a photo to start your discovery!
+            {t('uploadPrompt')}
           </p>
           <p className="text-sm text-gray-400">
             File must be JPEG, JPG, PNG, or WEBP
@@ -270,11 +274,11 @@ export default function PhotoUploadPage() {
       {latestUploadedFamily && (
         <div className="w-full max-w-7xl mt-8">
           <h2 className="text-xl font-bold mb-4 text-center">
-            More Plants from {latestUploadedFamily} Family
+            {t('morePlantsFrom', { family: t(latestUploadedFamily) })}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full max-w-7xl">
             {loadingSimilar ? (
-              <p>Loading similar plants...</p>
+              <p>{t('loadingSimilar')}</p>
             ) : similarPhotos.length > 1 ? (
               similarPhotos.map((photo) => (
                 <div
@@ -301,19 +305,19 @@ export default function PhotoUploadPage() {
               ))
             ) : (
               <p className="col-span-full text-center text-lg text-green-600">
-                Congratulations! You discovered a new plant family! 🌱
+                {t('congratsNewFamily')}
               </p>
             )}
           </div>
         </div>
       )}
 
-      <h2 className="text-xl font-bold mt-8">Latest Recognized Plants</h2>
+      <h2 className="text-xl font-bold mt-8">{t('latestRecognized')}</h2>
       <button
         onClick={() => router.push('/photos/all')}
         className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
       >
-        View All Photos
+        {t('viewAll')}
       </button>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full max-w-7xl">
         {loadingLatest ? (
@@ -333,7 +337,7 @@ export default function PhotoUploadPage() {
               </div>
               <div className="p-4">
                 <h3 className="text-lg font-semibold truncate">
-                  {photo.family_scientificNameWithoutAuthor}
+                  {t(photo.family_scientificNameWithoutAuthor) || photo.family_scientificNameWithoutAuthor}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
                   {new Date(photo.createdAt).toLocaleDateString("en-US", {
@@ -352,15 +356,15 @@ export default function PhotoUploadPage() {
         )}
       </div>
 
-      <h2 className="text-xl font-bold mt-8">Plant Families</h2>
+      <h2 className="text-xl font-bold mt-8">{t('plantFamilies')}</h2>
       {loadingCount ? (
-        <p className="text-gray-600">Loading family statistics...</p>
+        <p className="text-gray-600">{t('loading')}</p>
       ) : (
         <p className="text-gray-600">
-          You have seen {uniqueFamiliesCount} plant families out of 415 plant
-          families in the world
+          {t('statistics', { count: uniqueFamiliesCount })}
         </p>
       )}
+
       <div className="flex flex-col items-center gap-4 mt-4">
         <div className="flex gap-2">
           <button
@@ -368,21 +372,21 @@ export default function PhotoUploadPage() {
             disabled={currentPage === 1}
             className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
           >
-            Previous
+            {t('previous')}
           </button>
           <span className="px-4 py-2">
-            Page {currentPage} of {totalPages}
+            {t('page', { current: currentPage, total: totalPages })}
           </span>
           <button
             onClick={() => fetchPlantFamilies(currentPage + 1)}
             disabled={currentPage === totalPages}
             className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
           >
-            Next
+            {t('next')}
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <span>Go to page:</span>
+          <span>{t('goToPage')}</span>
           <input
             type="number"
             min="1"
@@ -399,17 +403,14 @@ export default function PhotoUploadPage() {
           />
         </div>
       </div>
+      {/* Update plant families grid to use translations */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
         {plantFamilies.map((family) => (
-          <div
-            key={family.id}
-            className="bg-white shadow-md rounded-lg overflow-hidden"
-          >
+          <div key={family.id} className="bg-white shadow-md rounded-lg overflow-hidden">
             <div className="bg-gray-200 h-32 flex items-center justify-center">
               {loadingPhotos ? (
-                <p className="text-center">Loading...</p>
-              ) : latestPhotos[family.family_scientificNameWithoutAuthor]
-                  ?.length > 0 ? (
+                <p className="text-center">{t('loading')}</p>
+              ) : latestPhotos[family.family_scientificNameWithoutAuthor]?.length > 0 ? (
                 <div className="relative h-full w-full">
                   {latestPhotos[family.family_scientificNameWithoutAuthor].map(
                     (photo, index) => (
@@ -425,12 +426,12 @@ export default function PhotoUploadPage() {
                   )}
                 </div>
               ) : (
-                <p className="text-center">No Image</p>
+                <p className="text-center">{t('noImage')}</p>
               )}
             </div>
             <div className="p-4">
               <h3 className="text-lg font-semibold">
-                {family.family_scientificNameWithoutAuthor}
+                {t(family.family_scientificNameWithoutAuthor) || family.family_scientificNameWithoutAuthor}
               </h3>
             </div>
           </div>
