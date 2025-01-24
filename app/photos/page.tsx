@@ -273,9 +273,11 @@ export default function PhotoUploadPage() {
       {/* Grid containers with consistent card styles */}
       {latestUploadedFamily && (
         <div className="w-full max-w-7xl mt-8">
-          <h2 className="text-xl font-bold mb-4 text-center">
-            {t('morePlantsFrom', { family: t(latestUploadedFamily) })}
-          </h2>
+          {similarPhotos.length > 1 && (
+            <h2 className="text-xl font-bold mb-4 text-center">
+              {t('morePlantsFrom', { family: t(latestUploadedFamily) })}
+            </h2>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full max-w-7xl">
             {loadingSimilar ? (
               <p>{t('loadingSimilar')}</p>
