@@ -199,7 +199,10 @@ export default function PhotoUploadPage() {
           )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full max-w-7xl">
             {loadingSimilar ? (
-              <p>{t('loadingSimilar')}</p>
+              // Center the loading text or icon using flexbox
+              <div className="flex justify-center items-center w-full h-full">
+                <p className="text-center">...</p>
+              </div>
             ) : similarPhotos.length > 1 ? (
               similarPhotos.map((photo) => (
                 <div
