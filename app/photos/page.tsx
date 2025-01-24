@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import  { Toaster } from "react-hot-toast";
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import ImageUploader from '@/components/ImageUploader';
@@ -19,6 +19,17 @@ interface PlantFamily {
 }
 
 
+
+// Skeleton component for loading state
+const SkeletonCard = () => (
+  <div className="bg-white shadow-md rounded-lg overflow-hidden h-[280px] animate-pulse">
+    <div className="h-48 w-full bg-gray-300"></div>
+    <div className="p-4">
+      <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+    </div>
+  </div>
+);
 
 export default function PhotoUploadPage() {
   const { t } = useTranslation();
@@ -166,57 +177,6 @@ export default function PhotoUploadPage() {
     ]);
   };
 
-  // Modify handleFileChange to call handleUploadSuccess
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-  
-      // Immediately start uploading the file
-      const uploadToast = toast.loading("Uploading photo...");
-  
-      const formData = new FormData();
-      formData.append("images", file);
-  
-      try {
-        const response = await fetch("/api/photos", {
-          method: "POST",
-          body: formData,
-        });
-  
-        // Try to parse error response as JSON first
-        if (!response.ok) {
-          let errorMessage;
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || 'Failed to upload photo';
-          } catch {
-            // If not JSON, get as text
-            errorMessage = await response.text();
-          }
-          throw new Error(errorMessage);
-        }
-  
-        toast.loading("Recognizing plant...", { id: uploadToast });
-        const data = await response.json();
-        console.log("API Response:", data);
-        setError(null);
-        
-        // Set latest uploaded family and fetch similar photos
-        const familyName = data.data.family_scientificNameWithoutAuthor;
-        await handleUploadSuccess(familyName);
-  
-        toast.success("Photo uploaded and plant recognized!", {
-          id: uploadToast,
-        });
-      } catch (err) {
-        setError((err as Error).message);
-        toast.error((err as Error).message || "Failed to upload and recognize photo", {
-          id: uploadToast,
-        });
-      }
-    }
-  };
-
   // Add new section in the return statement after the file upload section and before "Latest Recognized Plants"
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -282,7 +242,8 @@ export default function PhotoUploadPage() {
       </button>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 w-full max-w-7xl">
         {loadingLatest ? (
-          <p>Loading latest recognized plants...</p>
+          // Use SkeletonCard for loading state
+          Array.from({ length: 8 }).map((_, index) => <SkeletonCard key={index} />)
         ) : latestRecognized.length > 0 ? (
           latestRecognized.map((photo) => (
             <div

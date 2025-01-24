@@ -8,7 +8,7 @@ const resources = {
       latestPhotos: "Latest Recognized Plants",
       morePlantsFrom: "More Plants from {{family}} Family",
       latestRecognized: "Latest Recognized Plants",
-      plantFamilies: "Plant Families",
+      plantFamilies: "Plant Families Around the World",
       loading: "Loading...",
       loadingSimilar: "Loading similar plants...",
       noImage: "No Image",
@@ -19,6 +19,7 @@ const resources = {
       page: "Page {{current}} of {{total}}",
       uploadPrompt: "Did you know there are over 400 plant families in the world? Upload a photo to start your discovery!",
       viewAll: "View All",
+      statistics:"You have seen {{count}} plant families out of 415 plant families in the world! Incredible work! 🌿 ",
       // Plant family names translations
       Solanaceae: "Solanaceae",
       Lamiaceae: "Lamiaceae",
@@ -444,7 +445,7 @@ const resources = {
       latestPhotos: "最新识别的植物",
       morePlantsFrom: "更多{{family}}科的植物",
       latestRecognized: "最新识别的植物",
-      plantFamilies: "植物科属",
+      plantFamilies: "世界植物科属(共415科)",
       loading: "加载中...",
       loadingSimilar: "加载相似植物中...",
       noImage: "暂无图片",
@@ -454,6 +455,7 @@ const resources = {
       goToPage: "跳转到：",
       page: "第 {{current}} 页，共 {{total}} 页",
       viewAll: "查看全部已识别的植物",
+      statistics:"你已经看到过 {{count}} 个植物科啦！真棒🌿 ",
       uploadPrompt: "知道世界上有超过400个植物科吗？上传照片开始你的发现之旅！",
       // Plant family names translations
       Solanaceae: "茄科",
