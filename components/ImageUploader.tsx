@@ -11,16 +11,17 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({ onUploadSuccess, onError }: ImageUploaderProps) {
   const { t } = useTranslation();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       const uploadToast = toast.loading("Uploading photo...");
 
-      const formData = new FormData();
-      formData.append("images", file);
-
       try {
+        const formData = new FormData();
+        formData.append("images", file);
+
         const response = await fetch("/api/photos", {
           method: "POST",
           body: formData,
@@ -52,6 +53,11 @@ export default function ImageUploader({ onUploadSuccess, onError }: ImageUploade
         toast.error(errorMessage || "Failed to upload and recognize photo", {
           id: uploadToast,
         });
+      } finally {
+        // Reset the input value after upload (success or failure)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     }
   };
@@ -103,6 +109,7 @@ export default function ImageUploader({ onUploadSuccess, onError }: ImageUploade
           </p>
         </div>
         <input
+          ref={fileInputRef}
           type="file"
           accept="image/*"
           onChange={handleFileChange}

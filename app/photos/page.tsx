@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import ImageUploader from '@/components/ImageUploader';
 import JSConfetti from 'js-confetti';
+import { useRef } from 'react';
 
 interface LatestRecognizedPhoto {
   id: string;
@@ -37,8 +38,16 @@ export default function PhotoUploadPage() {
   const { t } = useTranslation();
   const router = useRouter();
 
-  // Initialize JSConfetti
-  const jsConfetti = new JSConfetti();
+  // Create a stable ref that won't change between renders
+  const jsConfettiRef = useRef<JSConfetti | null>(null);
+  const uploaderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Initialize JSConfetti with the container element
+    if (!jsConfettiRef.current && uploaderRef.current) {
+      jsConfettiRef.current = new JSConfetti();
+    }
+  }, []);
 
   const [error, setError] = useState<string | null>(null);
   const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
@@ -170,16 +179,19 @@ export default function PhotoUploadPage() {
 
   // Define handleUploadSuccess at the component level
   const handleUploadSuccess = async (familyName: string) => {
+    console.log('Upload success triggered with family:', familyName); // Debug log
+    
     setLatestUploadedFamily(familyName);
     await fetchSimilarPhotos(familyName);
     
-    // Trigger confetti effect with custom colors
-    jsConfetti.addConfetti({
-      confettiColors: [
-        '#f0b6ad', '#dc8864', '#ba4848', '#c75a1b', '#f7c435', '#818b2e', '#0b5227', '#85a993',
-      ],
-    });
-  
+    if (jsConfettiRef.current) {
+      jsConfettiRef.current.addConfetti({
+        confettiColors: [
+          '#f0b6ad', '#dc8864', '#ba4848', '#c75a1b', '#f7c435', '#818b2e', '#0b5227', '#85a993',
+        ],
+      });
+    }
+
     // Refresh other data
     await Promise.all([
       fetchLatestRecognized(),
@@ -191,11 +203,13 @@ export default function PhotoUploadPage() {
   // Add new section in the return statement after the file upload section and before "Latest Recognized Plants"
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <Toaster position="bottom-center" />
-      <ImageUploader 
-        onUploadSuccess={handleUploadSuccess}
-        onError={setError}
-      />
+      <div ref={uploaderRef}>
+        <Toaster position="bottom-center" />
+        <ImageUploader 
+          onUploadSuccess={handleUploadSuccess}
+          onError={setError}
+        />
+      </div>
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
       {photosError && <p className="text-red-500 mt-4">{photosError}</p>}
