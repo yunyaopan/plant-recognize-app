@@ -10,6 +10,7 @@ interface LatestRecognizedPhoto {
   id: string;
   photoUrl: string;
   family_scientificNameWithoutAuthor: string;
+  genus_scientificNameWithoutAuthor: string; // Add genus property
   createdAt: string;
 }
 
@@ -217,6 +218,9 @@ export default function PhotoUploadPage() {
                     />
                   </div>
                   <div className="p-4">
+                  <p className="text-sm text-gray-500 mt-1">
+                  Genus: {photo.genus_scientificNameWithoutAuthor} {/* Display genus */}
+                  </p>
                     <p className="text-sm text-gray-500">
                       {new Date(photo.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
@@ -264,6 +268,7 @@ export default function PhotoUploadPage() {
                 <h3 className="text-lg font-semibold truncate">
                   {t(photo.family_scientificNameWithoutAuthor) || photo.family_scientificNameWithoutAuthor}
                 </h3>
+
                 <p className="text-sm text-gray-500 mt-1">
                   {new Date(photo.createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
