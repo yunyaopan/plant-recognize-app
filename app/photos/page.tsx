@@ -5,6 +5,7 @@ import  { Toaster } from "react-hot-toast";
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import ImageUploader from '@/components/ImageUploader';
+import JSConfetti from 'js-confetti';
 
 interface LatestRecognizedPhoto {
   id: string;
@@ -34,8 +35,10 @@ const SkeletonCard = () => (
 
 export default function PhotoUploadPage() {
   const { t } = useTranslation();
-  
-  const router = useRouter(); // Ensure this is used within a page component
+  const router = useRouter();
+
+  // Initialize JSConfetti
+  const jsConfetti = new JSConfetti();
 
   const [error, setError] = useState<string | null>(null);
   const [plantFamilies, setPlantFamilies] = useState<PlantFamily[]>([]);
@@ -170,6 +173,13 @@ export default function PhotoUploadPage() {
     setLatestUploadedFamily(familyName);
     await fetchSimilarPhotos(familyName);
     
+    // Trigger confetti effect with custom colors
+    jsConfetti.addConfetti({
+      confettiColors: [
+        '#f0b6ad', '#dc8864', '#ba4848', '#c75a1b', '#f7c435', '#818b2e', '#0b5227', '#85a993',
+      ],
+    });
+  
     // Refresh other data
     await Promise.all([
       fetchLatestRecognized(),
