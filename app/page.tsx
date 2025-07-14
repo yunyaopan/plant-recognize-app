@@ -15,21 +15,51 @@ export default function Home() {
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchLatestPhotos = async () => {
-      try {
-        const response = await fetch('/api/photos?sortField=createdAt&sortOrder=desc&limit=6');
-        if (response.ok) {
-          const data = await response.json();
-          setLatestPhotos(data.slice(0, 6));
-        }
-      } catch (error) {
-        console.error('Failed to fetch latest photos:', error);
-      } finally {
-        setLoading(false);
+    // Static photo data with your provided URL
+    const staticPhotos: Photo[] = [
+      {
+        id: '1',
+        photoUrl: 'https://jcgeygwstgmkqzdpjsqj.supabase.co/storage/v1/object/public/photos/public/1737277090629-IMG_20220508_121035_Original.jpg',
+        family_scientificNameWithoutAuthor: 'Sample Plant Family',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '2',
+        photoUrl: 'https://jcgeygwstgmkqzdpjsqj.supabase.co/storage/v1/object/public/photos/public/1737277151986-IMG_20190815_122732_Original.jpg',
+        family_scientificNameWithoutAuthor: 'Sample Plant Family',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '3',
+        photoUrl: 'https://jcgeygwstgmkqzdpjsqj.supabase.co/storage/v1/object/public/photos/public/1737286282169-IMG_20220731_172130_Original.jpg',
+        family_scientificNameWithoutAuthor: 'Sample Plant Family',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '4',
+        photoUrl: 'https://jcgeygwstgmkqzdpjsqj.supabase.co/storage/v1/object/public/photos/public/1737300744116-IMG_20191103_091932_Original.jpeg',
+        family_scientificNameWithoutAuthor: 'Sample Plant Family',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '5',
+        photoUrl: 'https://jcgeygwstgmkqzdpjsqj.supabase.co/storage/v1/object/public/photos/public/1749866039854-IMG_2637.jpeg',
+        family_scientificNameWithoutAuthor: 'Sample Plant Family',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '6',
+        photoUrl: 'https://jcgeygwstgmkqzdpjsqj.supabase.co/storage/v1/object/public/photos/public/1737213974803-IMG_0396.jpeg',
+        family_scientificNameWithoutAuthor: 'Sample Plant Family',
+        createdAt: new Date().toISOString()
       }
-    };
+    ];
 
-    fetchLatestPhotos();
+    // Simulate loading delay
+    setTimeout(() => {
+      setLatestPhotos(staticPhotos);
+      setLoading(false);
+    }, 500);
   }, []);
 
   // Animation effect for random image unblur
