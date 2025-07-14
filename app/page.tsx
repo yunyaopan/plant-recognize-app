@@ -12,6 +12,7 @@ interface Photo {
 export default function Home() {
   const [latestPhotos, setLatestPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchLatestPhotos = async () => {
@@ -30,6 +31,28 @@ export default function Home() {
 
     fetchLatestPhotos();
   }, []);
+
+  // Animation effect for random image unblur
+  useEffect(() => {
+    if (latestPhotos.length === 0) return;
+
+    const animateImages = () => {
+      const randomIndex = Math.floor(Math.random() * latestPhotos.length);
+      setActiveImageIndex(randomIndex);
+      
+      setTimeout(() => {
+        setActiveImageIndex(null);
+      }, 2000); // Remove blur for 2 seconds
+    };
+
+    // Start animation immediately
+    animateImages();
+    
+    // Repeat every 3 seconds (2s visible + 1s gap)
+    const interval = setInterval(animateImages, 3000);
+
+    return () => clearInterval(interval);
+  }, [latestPhotos]);
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -93,6 +116,7 @@ export default function Home() {
                           // Create varied heights for authentic Pinterest look
                           const heightVariations = [140, 200, 160, 220, 150, 180, 170, 190, 130, 210];
                           const height = heightVariations[index % heightVariations.length];
+                          const isActive = activeImageIndex === index;
                           
                           return (
                             <div
@@ -103,7 +127,9 @@ export default function Home() {
                               <img
                                 src={photo.photoUrl}
                                 alt={photo.family_scientificNameWithoutAuthor}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${
+                                  isActive ? 'blur-none' : 'blur-sm'
+                                }`}
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <div className="absolute bottom-3 left-3 right-3">
