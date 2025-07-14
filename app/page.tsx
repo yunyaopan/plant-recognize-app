@@ -138,7 +138,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4 auto-rows-max">
+                      <div className="columns-2 gap-4">
                         {latestPhotos.map((photo, index) => {
                           // Create varied heights for authentic Pinterest look
                           const heightVariations = [140, 200, 160, 220, 150, 180, 170, 190, 130, 210];
@@ -148,7 +148,7 @@ export default function Home() {
                           return (
                             <div
                               key={photo.id}
-                              className="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 group"
+                              className="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 group break-inside-avoid mb-4"
                               style={{ height: `${height}px` }}
                             >
                               <img
