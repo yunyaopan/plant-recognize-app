@@ -91,12 +91,12 @@ export default function Home() {
         <div className="container mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Column - Title and Tagline */}
-            <div className="order-2 lg:order-1 space-y-8">
+            <div className="order-1 lg:order-1 space-y-8">
               <div className="space-y-6">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-stone-800 leading-tight">
                   Unlock the World of Plants Around You
                   <br />
-                  <span className="text-green-600 font-medium">Explore the Plant World, One Family at a Time</span>
+                  <span className="text-green-600 font-medium">Explore the Plant World, One Plant Family at a Time</span>
                 </h1>
                 <p className="text-lg sm:text-xl text-stone-600 leading-relaxed max-w-lg">
                   Explore the plant kingdom — identify plant families with photos and curate your unique botanical collection.
@@ -115,7 +115,7 @@ export default function Home() {
             </div>
 
             {/* Right Column - Plant Photos Grid */}
-            <div className="order-1 lg:order-2">
+            <div className="order-2 lg:order-2">
               <div className="relative">
                 <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-80" style={{ backgroundColor: '#606F49' }}></div>
                 <div className="relative bg-white rounded-3xl p-8 shadow-xl">
@@ -245,7 +245,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-medium mb-3 text-stone-700">Explore & Learn</h3>
               <p className="text-stone-500 leading-relaxed">
-                Discover similar plants and expand your knowledge
+                See all your past photos of the same plant family — compare, learn, and spot the differences.
               </p>
             </div>
           </div>
@@ -375,7 +375,10 @@ export default function Home() {
             </h2>
             <a
               href="/photos"
-              className="inline-flex items-center gap-3 bg-green-600 text-white px-10 py-4 rounded-full text-lg font-medium hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center gap-3 bg-green-600 text-white px-10 py-4 rounded-full text-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+              style={{ backgroundColor: '#606F49' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4a5a37'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#606F49'}
             >
               <span>🌿</span>
               Begin Discovering
@@ -387,7 +390,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-12 bg-stone-100">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-stone-500">A passion project by Iris Pan</p>
+          <p className="text-stone-500">A passion project by Iris Pan, built in weekends with AI coding bot Cursor</p>
         </div>
       </footer>
     </div>
