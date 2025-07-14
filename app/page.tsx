@@ -161,6 +161,10 @@ export default function Home() {
                                   isActive ? 'blur-none' : 'blur-sm'
                                 }`}
                               />
+                              {/* Dimming overlay for blurred images */}
+                              <div className={`absolute inset-0 bg-black transition-opacity duration-500 ${
+                                isActive ? 'opacity-0' : 'opacity-20'
+                              }`}></div>
                               <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <div className="absolute bottom-3 left-3 right-3">
                                   <p className="text-white text-sm font-medium truncate">
