@@ -109,18 +109,15 @@ export default function Home() {
                   className="inline-flex items-center gap-2 bg-stone-800 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-stone-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   <span>→</span>
-                  Start Discovering
+                  Try it out using a test account!
                 </a>
-                <button className="w-16 h-16 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 flex items-center justify-center group">
-                  <div className="w-0 h-0 border-l-[12px] border-l-stone-600 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1 group-hover:border-l-green-600 transition-colors"></div>
-                </button>
               </div>
             </div>
 
             {/* Right Column - Plant Photos Grid */}
             <div className="order-1 lg:order-2">
               <div className="relative">
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-orange-400 rounded-full opacity-80"></div>
+                <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-80" style={{ backgroundColor: '#606F49' }}></div>
                 <div className="relative bg-white rounded-3xl p-8 shadow-xl">
                   <h3 className="text-xl font-medium text-stone-700 mb-6 text-center">
                     Latest Plant Discoveries
@@ -188,19 +185,6 @@ export default function Home() {
                         </div>
                       )}
                       
-                      <div className="flex items-center justify-between pt-4">
-                        <button className="text-stone-400 hover:text-stone-600 transition-colors">
-                          ← PREV
-                        </button>
-                        <div className="flex gap-2">
-                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                          <div className="w-2 h-2 bg-stone-200 rounded-full"></div>
-                          <div className="w-2 h-2 bg-stone-200 rounded-full"></div>
-                        </div>
-                        <button className="text-stone-600 hover:text-green-600 transition-colors font-medium">
-                          NEXT →
-                        </button>
-                      </div>
                     </div>
                   )}
                 </div>
