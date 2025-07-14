@@ -74,35 +74,47 @@ export default function Home() {
                   </h3>
                   
                   {loading ? (
-                    <div className="grid grid-cols-2 gap-4 h-80">
-                      {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-stone-100 rounded-2xl animate-pulse" />
-                      ))}
+                    <div className="columns-2 gap-4 space-y-4 h-80">
+                      {[...Array(6)].map((_, i) => {
+                        const heights = [120, 160, 140, 180, 130, 170];
+                        return (
+                          <div 
+                            key={i} 
+                            className="bg-stone-100 rounded-2xl animate-pulse break-inside-avoid mb-4"
+                            style={{ height: `${heights[i]}px` }}
+                          />
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        {latestPhotos.slice(0, 4).map((photo, index) => (
-                          <div
-                            key={photo.id}
-                            className={`relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 group ${
-                              index === 0 ? 'col-span-2 h-48' : 'h-32'
-                            }`}
-                          >
-                            <img
-                              src={photo.photoUrl}
-                              alt={photo.family_scientificNameWithoutAuthor}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-stone-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="absolute bottom-3 left-3 right-3">
-                                <p className="text-white text-sm font-medium truncate">
-                                  {photo.family_scientificNameWithoutAuthor}
-                                </p>
+                      <div className="columns-2 gap-4">
+                        {latestPhotos.map((photo, index) => {
+                          // Create varied heights for authentic Pinterest look
+                          const heightVariations = [140, 200, 160, 220, 150, 180, 170, 190, 130, 210];
+                          const height = heightVariations[index % heightVariations.length];
+                          
+                          return (
+                            <div
+                              key={photo.id}
+                              className="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 group break-inside-avoid mb-4"
+                              style={{ height: `${height}px` }}
+                            >
+                              <img
+                                src={photo.photoUrl}
+                                alt={photo.family_scientificNameWithoutAuthor}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="absolute bottom-3 left-3 right-3">
+                                  <p className="text-white text-sm font-medium truncate">
+                                    {photo.family_scientificNameWithoutAuthor}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                       
                       {latestPhotos.length === 0 && (
