@@ -27,19 +27,20 @@ export default function ImageUploader({ onUploadSuccess, onError }: ImageUploade
           body: formData,
         });
 
+        const responseText = await response.text();
         if (!response.ok) {
           let errorMessage;
           try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || 'Failed to upload photo';
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.message || errorData.error || 'Failed to upload photo';
           } catch {
-            errorMessage = await response.text();
+            errorMessage = responseText || 'Failed to upload photo';
           }
           throw new Error(errorMessage);
         }
 
         toast.loading("Recognizing plant...", { id: uploadToast });
-        const data = await response.json();
+        const data = JSON.parse(responseText);
         const familyName = data.data.family_scientificNameWithoutAuthor;
         
         onUploadSuccess(familyName);
