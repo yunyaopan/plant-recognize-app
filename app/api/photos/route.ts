@@ -128,12 +128,17 @@ export async function POST(req: NextRequest) {
     const photoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/photos/public/${filename}`;
 
     // Construct the full URL for the recognize-plant API
+    // Must use a new FormData with the original buffer since images.arrayBuffer() already consumed the stream
+    const recognizeFormData = new FormData();
+    const imageBlob = new Blob([new Uint8Array(originalBuffer)], { type: images.type });
+    recognizeFormData.append("images", imageBlob, images.name);
+
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const recognizeResponse = await fetch(
       `${baseUrl}/api/recognize-plant`,
       {
         method: "POST",
-        body: formData,
+        body: recognizeFormData,
       }
     );
 
