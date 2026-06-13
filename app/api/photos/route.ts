@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
   // Get filter parameters
   const filters: Record<string, string> = {};
   const allowedFilters = [
-    'family_scientificNameWithoutAuthor',
-    'genus_scientificNameWithoutAuthor',
-    'country',
-    'city',
-    'district'
+    "family_scientificNameWithoutAuthor",
+    "genus_scientificNameWithoutAuthor",
+    "country",
+    "city",
+    "district",
   ];
 
-  allowedFilters.forEach(filter => {
+  allowedFilters.forEach((filter) => {
     const value = searchParams.get(filter);
     if (value) {
       filters[filter] = value;
@@ -48,7 +48,10 @@ export async function GET(request: NextRequest) {
   });
 
   // Apply pagination
-  const { data: photos, error } = await query.range(offset, offset + perPage - 1);
+  const { data: photos, error } = await query.range(
+    offset,
+    offset + perPage - 1,
+  );
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -72,12 +75,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Validate image format
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    // Validate image format (include HEIC/HEIF from iPhones)
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+    ];
     if (!allowedMimeTypes.includes(images.type)) {
       return NextResponse.json(
-        { error: "Invalid file format. Only JPG, PNG, and WEBP are allowed." },
-        { status: 400 }
+        {
+          error:
+            "Invalid file format. Only JPG, PNG, WEBP and HEIC/HEIF are allowed.",
+        },
+        { status: 400 },
       );
     }
 
@@ -107,13 +119,14 @@ export async function POST(req: NextRequest) {
         .toBuffer();
     }
 
-    const filename = `${Date.now()}-${images.name.replace(/\s+/g, "_")}`;
+    const baseName = images.name.replace(/\.[^.]+$/, "").replace(/\s+/g, "_");
+    const filename = `${Date.now()}-${baseName}.jpg`;
 
-    // Upload to Supabase storage
+    // Upload to Supabase storage (store as JPEG)
     const { error: storageError } = await supabase.storage
       .from("photos") // Ensure this matches your bucket name
       .upload(`public/${filename}`, processedBuffer, {
-        contentType: images.type,
+        contentType: "image/jpeg",
         upsert: false,
       });
 
@@ -128,19 +141,17 @@ export async function POST(req: NextRequest) {
     const photoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/photos/public/${filename}`;
 
     // Construct the full URL for the recognize-plant API
-    // Must use a new FormData with the original buffer since images.arrayBuffer() already consumed the stream
+    // Use the processed JPEG buffer for recognition to avoid HEIC incompatibilities
     const recognizeFormData = new FormData();
-    const imageBlob = new Blob([new Uint8Array(originalBuffer)], { type: images.type });
-    recognizeFormData.append("images", imageBlob, images.name);
+    const jpegName = images.name.replace(/\.[^.]+$/, "") + ".jpg";
+    const imageBlob = new Blob([processedBuffer], { type: "image/jpeg" });
+    recognizeFormData.append("images", imageBlob, jpegName);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const recognizeResponse = await fetch(
-      `${baseUrl}/api/recognize-plant`,
-      {
-        method: "POST",
-        body: recognizeFormData,
-      }
-    );
+    const recognizeResponse = await fetch(`${baseUrl}/api/recognize-plant`, {
+      method: "POST",
+      body: recognizeFormData,
+    });
 
     if (!recognizeResponse.ok) {
       const errorText = await recognizeResponse.text();
@@ -148,10 +159,10 @@ export async function POST(req: NextRequest) {
         "Recognize Plant API Error:",
         recognizeResponse.status,
         recognizeResponse.statusText,
-        errorText
+        errorText,
       );
       throw new Error(
-        `Failed to recognize plant: ${recognizeResponse.status} ${recognizeResponse.statusText}`
+        `Failed to recognize plant: ${recognizeResponse.status} ${recognizeResponse.statusText}`,
       );
     }
 
@@ -178,8 +189,20 @@ export async function POST(req: NextRequest) {
     // Reverse geocode coordinates using Nominatim
     const reverseGeocode = async (lat: number, lon: number) => {
       try {
+        const nominatimHeaders: Record<string, string> = {
+          Accept: "application/json",
+          "User-Agent":
+            process.env.NOMINATIM_USER_AGENT ||
+            process.env.NEXT_PUBLIC_BASE_URL ||
+            "my-app",
+        };
+        if (process.env.NOMINATIM_EMAIL) {
+          nominatimHeaders["From"] = process.env.NOMINATIM_EMAIL;
+        }
+
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+          { headers: nominatimHeaders },
         );
 
         if (!response.ok) {
@@ -207,11 +230,11 @@ export async function POST(req: NextRequest) {
     if (metadata.GPSLatitude && metadata.GPSLongitude) {
       const lat = convertDMSToDecimal(
         metadata.GPSLatitude,
-        metadata.GPSLatitudeRef
+        metadata.GPSLatitudeRef,
       );
       const lon = convertDMSToDecimal(
         metadata.GPSLongitude,
-        metadata.GPSLongitudeRef
+        metadata.GPSLongitudeRef,
       );
 
       locationInfo = await reverseGeocode(lat, lon);
@@ -262,13 +285,12 @@ export async function POST(req: NextRequest) {
             message: error.message,
           },
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
     return NextResponse.json(
       { error: "An unknown error occurred during file upload" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
